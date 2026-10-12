@@ -1,0 +1,17 @@
+# Estado gerado em execução (persistência em JSON)
+backend/storage/*.json
+
+# Cookies
+
+cookies.txt
+
+# PHPUnit
+.phpunit.result.cache
+.phpunit.cache/
+
+
+# Editor / sistema
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

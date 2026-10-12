@@ -1,0 +1,551 @@
+openapi: 3.0.3
+info:
+  title: HidroControl API
+  version: 1.0.0
+  description: |
+    API do protótipo HidroControl, que monitora de forma simplificada uma usina hidrelétrica.
+
+    Os dados são **simulados** (cenários A, B e C) e as alterações feitas pelo operador são
+    guardadas em arquivo JSON, sem banco de dados.
+
+    **Como usar esta página**
+    1. Chame **entrar** com `joao@hidrocontrol.test` e a senha `senha123` (ou `maria@hidrocontrol.test`).
+    2. O navegador guarda o cookie da sessão, e as demais rotas passam a funcionar.
+    3. Para recomeçar a demonstração, chame **restaurar**.
+
+    **Roteamento:** todas as rotas usam o mesmo arquivo, `index.php`, e o parâmetro `rota`
+    (e `acao`, quando existe) escolhe a operação. Por isso o caminho de cada operação aqui
+    inclui essa parte da consulta.
+
+    Os limites usados nas regras são didáticos e não representam parâmetros de segurança reais.
+servers:
+  - url: /hidrocontrol/backend
+    description: Servidor local (Laragon)
+tags:
+  - name: Sistema
+    description: Verificação do funcionamento
+  - name: Autenticação
+    description: Login com sessão (usuários fixos para demonstração)
+  - name: Usina
+    description: Leitura da usina, alertas e histórico
+  - name: Turbinas
+    description: Ações do operador sobre as turbinas
+
+paths:
+  /index.php?rota=status:
+    get:
+      tags: [Sistema]
+      summary: Verifica se a API está no ar
+      operationId: status
+      responses:
+        '200':
+          description: API funcionando
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  sistema: { type: string, example: HidroControl }
+                  status: { type: string, example: ok }
+
+  /index.php?rota=auth&acao=entrar:
+    post:
+      tags: [Autenticação]
+      summary: Entra no sistema
+      description: |
+        Confere e-mail e senha e abre a sessão. Aceita JSON (usado pelo painel) ou formulário.
+        A resposta é a mesma para e-mail inexistente e senha errada.
+        A ação é registrada no histórico (`ENTRAR`).
+      operationId: entrar
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Credenciais'
+            example:
+              email: joao@hidrocontrol.test
+              senha: senha123
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Credenciais'
+      responses:
+        '200':
+          description: Login realizado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operador:
+                    $ref: '#/components/schemas/OperadorResumo'
+        '401':
+          description: E-mail ou senha inválidos
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erro' }
+              example: { erro: 'E-mail ou senha inválidos.' }
+        '405':
+          $ref: '#/components/responses/MetodoNaoPermitido'
+
+  /index.php?rota=auth&acao=sair:
+    post:
+      tags: [Autenticação]
+      summary: Sai do sistema
+      description: Encerra a sessão e registra a ação (`SAIR`). Sem ninguém logado, não faz nada.
+      operationId: sair
+      responses:
+        '200':
+          description: Sessão encerrada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensagem: { type: string, example: 'Sessão encerrada.' }
+        '405':
+          $ref: '#/components/responses/MetodoNaoPermitido'
+
+  /index.php?rota=auth&acao=eu:
+    get:
+      tags: [Autenticação]
+      summary: Informa quem está logado
+      operationId: eu
+      responses:
+        '200':
+          description: Operador autenticado
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  operador:
+                    $ref: '#/components/schemas/OperadorResumo'
+        '401':
+          description: Ninguém autenticado
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Erro' }
+              example: { erro: 'Nenhum operador autenticado.' }
+
+  /index.php?rota=leitura:
+    get:
+      tags: [Usina]
+      summary: Lê a usina em um cenário
+      description: |
+        Devolve a situação geral, o reservatório, as turbinas e os alertas do cenário.
+        As alterações que o operador fez nas turbinas daquele cenário já vêm aplicadas.
+
+        - **A:** operação normal (nenhum alerta)
+        - **B:** atenção (nível baixo e temperatura em ATENÇÃO)
+        - **C:** crítico (nível muito alto, temperatura crítica e uma turbina desligada)
+      operationId: leitura
+      security:
+        - sessao: []
+      parameters:
+        - $ref: '#/components/parameters/Cenario'
+      responses:
+        '200':
+          description: Leitura da usina
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Leitura' }
+              example:
+                cenario: C
+                situacaoGeral: CRÍTICO
+                usina:
+                  nome: Usina SENAI
+                  potenciaGerada: 21.5
+                  operador: { nome: João Silva, setor: Operação }
+                reservatorio:
+                  codigo: R-01
+                  nivel: 95
+                  vazao: 610
+                  situacao: 'ALERTA: nível muito alto'
+                resumoTurbinas:
+                  quantidade: 3
+                  temperaturaMaxima: 92
+                  situacaoTemperatura: CRÍTICO
+                  estado: DESLIGADA
+                turbinas:
+                  - { codigo: T-01, nome: Turbina 01, ligada: true, estado: EM OPERAÇÃO, temperatura: 92, situacaoTemperatura: CRÍTICO }
+                  - { codigo: T-02, nome: Turbina 02, ligada: false, estado: DESLIGADA, temperatura: 70, situacaoTemperatura: ATENÇÃO }
+                  - { codigo: T-03, nome: Turbina 03, ligada: true, estado: EM OPERAÇÃO, temperatura: 65, situacaoTemperatura: NORMAL }
+                alertas:
+                  - codigo: NIVEL-ATENCAO
+                    parametro: Nível do reservatório
+                    gravidade: ATENÇÃO
+                    mensagem: Nível acima de 90%
+                    acaoRecomendada: Avaliar a abertura do vertedouro e comunicar o supervisor
+                    texto: 'ATENÇÃO: Nível acima de 90%. Ação: Avaliar a abertura do vertedouro e comunicar o supervisor.'
+                  - codigo: TEMP-CRITICO
+                    parametro: Temperatura
+                    gravidade: CRÍTICO
+                    mensagem: 'Temperatura da Turbina 01 em 92 °C (acima de 85 °C)'
+                    acaoRecomendada: Reduzir a carga ou desligar a turbina e acionar a manutenção
+                    texto: 'CRÍTICO: Temperatura da Turbina 01 em 92 °C (acima de 85 °C). Ação: Reduzir a carga ou desligar a turbina e acionar a manutenção.'
+                  - codigo: TURBINA-ATENCAO
+                    parametro: Turbina
+                    gravidade: ATENÇÃO
+                    mensagem: Turbina 02 está desligada
+                    acaoRecomendada: Verificar o motivo do desligamento e acionar a manutenção
+                    texto: 'ATENÇÃO: Turbina 02 está desligada. Ação: Verificar o motivo do desligamento e acionar a manutenção.'
+                limites:
+                  nivelMinimo: 30
+                  nivelMaximo: 90
+                  temperaturaAtencao: 70
+                  temperaturaCritica: 85
+        '400':
+          $ref: '#/components/responses/CenarioInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
+  /index.php?rota=registros:
+    get:
+      tags: [Usina]
+      summary: Lista as últimas ações dos operadores
+      description: Os 10 registros mais recentes, do mais novo para o mais antigo.
+      operationId: registros
+      security:
+        - sessao: []
+      responses:
+        '200':
+          description: Histórico de ações
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  registros:
+                    type: array
+                    items: { $ref: '#/components/schemas/Registro' }
+              example:
+                registros:
+                  - operador: João Silva
+                    acao: DESLIGAR_TURBINA
+                    codigoTurbina: T-02
+                    dataHora: '2026-10-11 08:47:12'
+                    texto: '11/10 08:47 – João Silva desligou a turbina T-02'
+                  - operador: João Silva
+                    acao: ENTRAR
+                    codigoTurbina: null
+                    dataHora: '2026-10-11 08:45:03'
+                    texto: '11/10 08:45 – João Silva entrou no sistema'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+
+  /index.php?rota=turbina&acao=ligar:
+    post:
+      tags: [Turbinas]
+      summary: Liga uma turbina
+      description: |
+        Liga a turbina e devolve a leitura já atualizada. A alteração fica guardada **só no cenário informado**.
+        A ação é registrada no histórico (`LIGAR_TURBINA`). Se a turbina já estiver ligada, nada é alterado nem registrado.
+      operationId: ligarTurbina
+      security:
+        - sessao: []
+      parameters:
+        - $ref: '#/components/parameters/CodigoTurbina'
+        - $ref: '#/components/parameters/Cenario'
+      responses:
+        '200':
+          $ref: '#/components/responses/TurbinaAlterada'
+        '400':
+          $ref: '#/components/responses/CenarioInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/TurbinaInexistente'
+        '405':
+          $ref: '#/components/responses/MetodoNaoPermitido'
+        '409':
+          $ref: '#/components/responses/JaNoEstadoPedido'
+
+  /index.php?rota=turbina&acao=desligar:
+    post:
+      tags: [Turbinas]
+      summary: Desliga uma turbina
+      description: |
+        Desliga a turbina e devolve a leitura já atualizada. A alteração fica guardada **só no cenário informado**.
+        A ação é registrada no histórico (`DESLIGAR_TURBINA`). Se a turbina já estiver desligada, nada é alterado nem registrado.
+        Os alertas são recalculados a partir do novo estado (a turbina desligada gera um alerta de ATENÇÃO).
+      operationId: desligarTurbina
+      security:
+        - sessao: []
+      parameters:
+        - $ref: '#/components/parameters/CodigoTurbina'
+        - $ref: '#/components/parameters/Cenario'
+      responses:
+        '200':
+          $ref: '#/components/responses/TurbinaAlterada'
+        '400':
+          $ref: '#/components/responses/CenarioInvalido'
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '404':
+          $ref: '#/components/responses/TurbinaInexistente'
+        '405':
+          $ref: '#/components/responses/MetodoNaoPermitido'
+        '409':
+          $ref: '#/components/responses/JaNoEstadoPedido'
+
+  /index.php?rota=restaurar:
+    post:
+      tags: [Turbinas]
+      summary: Restaura a simulação
+      description: |
+        Descarta as alterações feitas nas turbinas, **de todos os cenários**, e registra a ação (`RESTAURAR_SIMULACAO`).
+        O histórico de ações não é apagado.
+      operationId: restaurar
+      security:
+        - sessao: []
+      responses:
+        '200':
+          description: Simulação restaurada
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  mensagem: { type: string, example: 'Simulação restaurada.' }
+        '401':
+          $ref: '#/components/responses/NaoAutenticado'
+        '405':
+          $ref: '#/components/responses/MetodoNaoPermitido'
+
+components:
+  securitySchemes:
+    sessao:
+      type: apiKey
+      in: cookie
+      name: PHPSESSID
+      description: |
+        Cookie de sessão, criado ao chamar **entrar**. O navegador o envia sozinho nas chamadas
+        seguintes, então não é preciso preencher nada no botão "Authorize".
+
+  parameters:
+    Cenario:
+      name: cenario
+      in: query
+      description: Cenário de simulação. Aceita maiúsculas ou minúsculas. Se omitido, usa o A.
+      schema:
+        type: string
+        enum: [A, B, C]
+        default: A
+    CodigoTurbina:
+      name: codigo
+      in: query
+      required: true
+      description: Código da turbina (T-01, T-02 ou T-03).
+      schema:
+        type: string
+        example: T-02
+
+  responses:
+    NaoAutenticado:
+      description: Sem sessão ativa
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+          example: { erro: 'Faça login para continuar.' }
+    CenarioInvalido:
+      description: Cenário ou ação inválidos
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+          example: { erro: 'Cenário inválido: use A, B, C.' }
+    TurbinaInexistente:
+      description: Não existe turbina com esse código
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+          example: { erro: 'Turbina não encontrada: T-99.' }
+    JaNoEstadoPedido:
+      description: A turbina já está no estado pedido (nada foi alterado nem registrado)
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+          example: { erro: 'A turbina T-02 já está desligada.' }
+    MetodoNaoPermitido:
+      description: A rota exige o método POST
+      headers:
+        Allow:
+          description: Métodos aceitos
+          schema: { type: string, example: POST }
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/Erro' }
+          example: { erro: 'Use o método POST.' }
+    TurbinaAlterada:
+      description: Turbina alterada. Devolve a leitura atualizada e a frase do registro.
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/LeituraComRegistro' }
+          example:
+            cenario: A
+            situacaoGeral: ATENÇÃO
+            usina:
+              nome: Usina SENAI
+              potenciaGerada: 65.8
+              operador: { nome: João Silva, setor: Operação }
+            reservatorio: { codigo: R-01, nivel: 70, vazao: 420, situacao: NORMAL }
+            resumoTurbinas: { quantidade: 3, temperaturaMaxima: 65, situacaoTemperatura: NORMAL, estado: DESLIGADA }
+            turbinas:
+              - { codigo: T-01, nome: Turbina 01, ligada: true, estado: EM OPERAÇÃO, temperatura: 65, situacaoTemperatura: NORMAL }
+              - { codigo: T-02, nome: Turbina 02, ligada: false, estado: DESLIGADA, temperatura: 62, situacaoTemperatura: NORMAL }
+              - { codigo: T-03, nome: Turbina 03, ligada: true, estado: EM OPERAÇÃO, temperatura: 60, situacaoTemperatura: NORMAL }
+            alertas:
+              - codigo: TURBINA-ATENCAO
+                parametro: Turbina
+                gravidade: ATENÇÃO
+                mensagem: Turbina 02 está desligada
+                acaoRecomendada: Verificar o motivo do desligamento e acionar a manutenção
+                texto: 'ATENÇÃO: Turbina 02 está desligada. Ação: Verificar o motivo do desligamento e acionar a manutenção.'
+            limites: { nivelMinimo: 30, nivelMaximo: 90, temperaturaAtencao: 70, temperaturaCritica: 85 }
+            registro: '11/10 08:47 – João Silva desligou a turbina T-02'
+
+  schemas:
+    Erro:
+      type: object
+      properties:
+        erro: { type: string }
+      required: [erro]
+
+    Credenciais:
+      type: object
+      required: [email, senha]
+      properties:
+        email: { type: string, format: email, example: joao@hidrocontrol.test }
+        senha: { type: string, format: password, example: senha123 }
+
+    OperadorResumo:
+      type: object
+      description: Do operador, a API expõe apenas nome e setor (nunca CPF, e-mail, telefone ou senha).
+      properties:
+        nome: { type: string, example: João Silva }
+        setor: { type: string, example: Operação }
+
+    Situacao:
+      type: string
+      enum: [NORMAL, ATENÇÃO, CRÍTICO]
+
+    Reservatorio:
+      type: object
+      properties:
+        codigo: { type: string, example: R-01 }
+        nivel: { type: number, description: Nível em porcentagem (0 a 100), example: 70 }
+        vazao: { type: number, description: Vazão em m³/s, example: 420 }
+        situacao:
+          type: string
+          description: Abaixo de 30 é nível baixo, de 30 a 90 é normal e acima de 90 é nível muito alto.
+          enum: ['NORMAL', 'ALERTA: nível baixo', 'ALERTA: nível muito alto']
+
+    Turbina:
+      type: object
+      properties:
+        codigo: { type: string, example: T-02 }
+        nome: { type: string, example: Turbina 02 }
+        ligada: { type: boolean }
+        estado:
+          type: string
+          enum: [EM OPERAÇÃO, DESLIGADA]
+        temperatura: { type: number, description: Temperatura em °C, example: 62 }
+        situacaoTemperatura:
+          description: Abaixo de 70 é normal, de 70 a 85 é atenção e acima de 85 é crítico.
+          allOf:
+            - $ref: '#/components/schemas/Situacao'
+
+    ResumoTurbinas:
+      type: object
+      properties:
+        quantidade: { type: integer, example: 3 }
+        temperaturaMaxima: { type: number, example: 65 }
+        situacaoTemperatura:
+          $ref: '#/components/schemas/Situacao'
+        estado:
+          type: string
+          description: EM OPERAÇÃO somente se todas as turbinas estiverem ligadas.
+          enum: [EM OPERAÇÃO, DESLIGADA]
+
+    Alerta:
+      type: object
+      properties:
+        codigo:
+          type: string
+          description: Identificador derivado (NIVEL-ATENCAO, TEMP-ATENCAO, TEMP-CRITICO, TURBINA-ATENCAO).
+          example: TURBINA-ATENCAO
+        parametro: { type: string, example: Turbina }
+        gravidade:
+          type: string
+          enum: [ATENÇÃO, CRÍTICO]
+        mensagem: { type: string }
+        acaoRecomendada: { type: string }
+        texto:
+          type: string
+          description: Frase pronta para exibir ao operador.
+
+    Limites:
+      type: object
+      description: Limites das regras de decisão, para o painel desenhar as marcas das escalas.
+      properties:
+        nivelMinimo: { type: number, example: 30 }
+        nivelMaximo: { type: number, example: 90 }
+        temperaturaAtencao: { type: number, example: 70 }
+        temperaturaCritica: { type: number, example: 85 }
+
+    Leitura:
+      type: object
+      properties:
+        cenario:
+          type: string
+          enum: [A, B, C]
+        situacaoGeral:
+          description: Prevalece o pior estado encontrado (CRÍTICO, depois ATENÇÃO, depois NORMAL).
+          allOf:
+            - $ref: '#/components/schemas/Situacao'
+        usina:
+          type: object
+          properties:
+            nome: { type: string, example: Usina SENAI }
+            potenciaGerada: { type: number, description: Potência em MW, example: 65.8 }
+            operador:
+              $ref: '#/components/schemas/OperadorResumo'
+        reservatorio:
+          $ref: '#/components/schemas/Reservatorio'
+        resumoTurbinas:
+          $ref: '#/components/schemas/ResumoTurbinas'
+        turbinas:
+          type: array
+          items: { $ref: '#/components/schemas/Turbina' }
+        alertas:
+          type: array
+          description: De 0 a 3 alertas (um por parâmetro).
+          items: { $ref: '#/components/schemas/Alerta' }
+        limites:
+          $ref: '#/components/schemas/Limites'
+
+    LeituraComRegistro:
+      allOf:
+        - $ref: '#/components/schemas/Leitura'
+        - type: object
+          properties:
+            registro:
+              type: string
+              description: Frase do registro da ação realizada.
+              example: '11/10 08:47 – João Silva desligou a turbina T-02'
+
+    Registro:
+      type: object
+      properties:
+        operador: { type: string, example: João Silva }
+        acao:
+          type: string
+          enum: [LIGAR_TURBINA, DESLIGAR_TURBINA, ENTRAR, SAIR, GERAR_RELATORIO, RESTAURAR_SIMULACAO]
+        codigoTurbina:
+          type: string
+          nullable: true
+          description: Preenchido só nas ações de ligar e desligar.
+        dataHora:
+          type: string
+          example: '2026-10-11 08:47:12'
+        texto: { type: string }

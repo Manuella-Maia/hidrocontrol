@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HidroControl: painel</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topo">
+    <h1 class="produto">HidroControl</h1>
+    <div class="sessao">
+      <span id="operador-nome"></span>
+      <button type="button" id="btn-sair" class="botao-discreto">Sair</button>
+    </div>
+  </header>
+
+  <main class="pagina">
+    <p id="mensagem-erro" class="erro" role="alert" hidden></p>
+    <p id="mensagem-status" class="aviso" role="status" hidden></p>
+
+    <section id="situacao" class="situacao" data-estado="carregando" aria-labelledby="situacao-rotulo">
+      <div class="situacao-principal">
+        <span class="marca marca-grande" aria-hidden="true"></span>
+        <div>
+          <p id="situacao-rotulo" class="rotulo">Situação geral da usina</p>
+          <p id="situacao-texto" class="situacao-texto" aria-live="polite">Carregando</p>
+          <p id="situacao-resumo" class="situacao-resumo"></p>
+        </div>
+      </div>
+      <dl class="situacao-meta">
+        <div><dt>Usina</dt><dd id="meta-usina">–</dd></div>
+        <div><dt>Operador</dt><dd id="meta-operador">–</dd></div>
+        <div><dt>Potência gerada</dt><dd id="meta-potencia">–</dd></div>
+        <div><dt>Atualizado às</dt><dd id="meta-atualizado">–</dd></div>
+      </dl>
+    </section>
+
+    <div class="barra-comandos">
+      <div class="cenarios" role="group" aria-label="Cenário de simulação">
+        <span class="rotulo">Cenário</span>
+        <button type="button" data-cenario="A" aria-pressed="true">A: Normal</button>
+        <button type="button" data-cenario="B" aria-pressed="false">B: Atenção</button>
+        <button type="button" data-cenario="C" aria-pressed="false">C: Crítico</button>
+      </div>
+      <div class="comandos-direita">
+        <button type="button" id="btn-atualizar" class="botao-discreto">Atualizar</button>
+        <button type="button" id="btn-restaurar" class="botao-discreto">Restaurar simulação</button>
+      </div>
+    </div>
+
+    <div class="grade-principal">
+      <section id="reservatorio" class="reservatorio" data-estado="normal" aria-labelledby="titulo-reservatorio">
+        <h2 id="titulo-reservatorio">Reservatório</h2>
+        <div class="reservatorio-corpo">
+          <div class="tanque-area">
+            <div id="tanque" class="tanque" role="meter" aria-label="Nível do reservatório"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+              <div id="tanque-faixa" class="tanque-faixa"></div>
+              <div id="tanque-agua" class="tanque-agua"></div>
+            </div>
+            <span id="marca-maximo" class="tanque-marca"></span>
+            <span id="marca-minimo" class="tanque-marca"></span>
+          </div>
+          <div class="reservatorio-dados">
+            <p id="reservatorio-nivel" class="numero-grande">–</p>
+            <p class="rotulo">Nível</p>
+            <p class="situacao-linha"><span class="marca" aria-hidden="true"></span><span id="reservatorio-situacao">–</span></p>
+            <p id="reservatorio-vazao" class="numero-medio">–</p>
+            <p class="rotulo">Vazão</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="turbinas" aria-labelledby="titulo-turbinas">
+        <h2 id="titulo-turbinas">Turbinas</h2>
+        <ul id="lista-turbinas" class="lista-turbinas"></ul>
+      </section>
+    </div>
+
+    <div class="grade-inferior">
+      <section aria-labelledby="titulo-alertas">
+        <h2 id="titulo-alertas">Alertas</h2>
+        <ul id="lista-alertas" class="lista-alertas"></ul>
+      </section>
+      <section aria-labelledby="titulo-eventos">
+        <h2 id="titulo-eventos">Últimos eventos</h2>
+        <ul id="lista-eventos" class="lista-eventos"></ul>
+      </section>
+    </div>
+  </main>
+
+  <div id="toasts" class="toasts" role="region" aria-label="Notificações"></div>
+
+  <script type="module" src="js/painel.js"></script>
+</body>
+</html>

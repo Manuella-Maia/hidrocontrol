@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HidroControl: entrar</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="pagina-login">
+  <main class="login">
+    <h1 class="produto">HidroControl</h1>
+    <p class="login-subtitulo">Painel de operação da usina</p>
+
+    <form id="formulario" class="formulario" novalidate>
+      <p id="mensagem-erro" class="erro" role="alert" hidden></p>
+
+      <label for="email">E-mail</label>
+      <input id="email" name="email" type="email" autocomplete="username" required autofocus>
+
+      <label for="senha">Senha</label>
+      <input id="senha" name="senha" type="password" autocomplete="current-password" required>
+
+      <button type="submit" id="btn-entrar" class="botao-principal">Entrar</button>
+    </form>
+
+    <p class="dica">Para demonstração: joao@hidrocontrol.test, senha senha123.</p>
+  </main>
+
+  <script type="module" src="js/login.js"></script>
+</body>
+</html>
