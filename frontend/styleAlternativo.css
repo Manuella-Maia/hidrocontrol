@@ -1,0 +1,445 @@
+/* HidroControl: sala de controle.
+   Tipografia industrial do sistema (Bahnschrift no Windows), fundo azul-ardósia,
+   estados sempre codificados por cor + forma + texto (RNF04). */
+
+:root {
+  --fundo: #0e1c2a;
+  --superficie: #142b3f;
+  --linha: #2a4760;
+  --texto: #eaf1f6;
+  --texto-suave: #a9bdcc;
+  --agua: #4fb6d9;
+  --ok: #43c59e;
+  --atencao: #f4b740;
+  --critico: #ff5a5f;
+  --cor-estado: var(--texto-suave);
+
+  --fonte: Bahnschrift, "DIN Alternate", "Segoe UI", system-ui, sans-serif;
+  --raio: 4px;
+}
+
+/* Cada estado define cor E forma; o elemento mais próximo vence, então um selo
+   "atenção" dentro de uma linha "crítica" mantém a sua própria cor e forma. */
+[data-estado="normal"]  { --cor-estado: var(--ok);      --forma: circle(50%); }
+[data-estado="atencao"] { --cor-estado: var(--atencao); --forma: polygon(50% 0, 100% 100%, 0 100%); }
+[data-estado="critico"] { --cor-estado: var(--critico); --forma: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;                 /* o fundo cobre a tela inteira */
+  background: var(--fundo);          /* cor de reserva */
+  /* NOVO: degradê simples, de um azul um pouco mais claro (topo) para o fundo escuro */
+  background: linear-gradient(180deg, #1a3a55, var(--fundo));
+  color: var(--texto);
+  font-family: var(--fonte);
+  font-size: 1.125rem;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
+h1, h2, p, ul, dl, dd { margin: 0; }
+ul { padding: 0; list-style: none; }
+
+:focus-visible { outline: 3px solid var(--agua); outline-offset: 2px; }
+
+/* ---------- Formas dos estados (além da cor) ---------- */
+
+.marca {
+  display: inline-block;
+  flex: none;
+  width: 0.8em;
+  height: 0.8em;
+  background: var(--cor-estado);
+  clip-path: var(--forma, circle(50%));
+}
+.marca-grande { width: 2.4rem; height: 2.4rem; }
+
+.rotulo { color: var(--texto-suave); font-size: 0.95rem; }
+
+/* ---------- Topo ---------- */
+
+.topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.9rem clamp(1rem, 4vw, 2.5rem);
+  background: var(--superficie);     /* NOVO: fundo um pouco mais claro que a página */
+  border-bottom: 1px solid var(--linha);
+}
+
+/* Nome do produto: agora com a gota ao lado (painel e login) */
+.produto {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* NOVO: a gota. É um quadradinho azul com 3 cantos redondos, girado em 45°.
+   Usa "em", então acompanha o tamanho do texto (fica maior no login sozinha). */
+.produto::before {
+  content: "";
+  width: 0.7em;
+  height: 0.7em;
+  background: var(--agua);
+  border-radius: 0 50% 50% 50%;
+  transform: rotate(45deg);
+}
+
+.sessao { display: flex; align-items: center; gap: 1rem; color: var(--texto-suave); }
+
+.pagina {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem clamp(1rem, 4vw, 2.5rem) 3rem;
+  display: grid;
+  gap: 1.5rem;
+}
+
+h2 { font-size: 1.25rem; font-weight: 700; margin-bottom: 0.9rem; }
+
+/* ---------- Situação geral (o destaque da tela) ---------- */
+
+.situacao {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem 3rem;
+  padding: 1.5rem clamp(1rem, 3vw, 2rem);
+  border: 2px solid var(--cor-estado);
+  border-radius: var(--raio);
+  background: color-mix(in srgb, var(--cor-estado) 14%, var(--superficie));
+}
+.situacao-principal { display: flex; align-items: center; gap: 1.25rem; }
+
+/* ALTERADO: texto menor (antes chegava a 4.5rem e batia nas informações ao lado) */
+.situacao-texto {
+  font-size: 2.5rem;
+  font-weight: 700;
+  line-height: 1.05;
+  color: var(--cor-estado);
+}
+.situacao-resumo { margin-top: 0.25rem; }
+
+.situacao-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(9rem, 1fr));
+  gap: 0.9rem 2rem;
+}
+.situacao-meta dt { color: var(--texto-suave); font-size: 0.95rem; }
+.situacao-meta dd { font-weight: 600; }
+
+/* ---------- Comandos ---------- */
+
+.barra-comandos {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+}
+.cenarios { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
+.cenarios .rotulo { margin-right: 0.25rem; }
+
+button { font: inherit; color: inherit; cursor: pointer; }
+
+.cenarios button {
+  min-height: 2.75rem;
+  padding: 0.4rem 1rem;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--superficie);     /* ALTERADO: antes era transparente */
+}
+.cenarios button[aria-pressed="true"] {
+  background: var(--texto);
+  border-color: var(--texto);
+  color: var(--fundo);
+  font-weight: 700;
+}
+
+.botao-discreto {
+  min-height: 2.5rem;
+  padding: 0.3rem 0.9rem;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--superficie);     /* ALTERADO: antes era transparente */
+}
+.botao-discreto:hover { border-color: var(--texto-suave); }
+
+/* ---------- Grade principal ---------- */
+
+.grade-principal { display: grid; gap: 2rem; }
+.grade-inferior  { display: grid; gap: 2rem; }
+
+@media (min-width: 900px) {
+  .grade-principal { grid-template-columns: 320px 1fr; align-items: start; }
+  .grade-inferior  { grid-template-columns: 3fr 2fr; align-items: start; }
+}
+
+/* ALTERADO: em vez de só uma linha no topo, cada bloco vira uma caixa
+   com fundo e borda, para se destacar do fundo azul da página */
+.reservatorio, .turbinas, .grade-inferior > section {
+  padding: 1rem 1.25rem;
+  background: var(--superficie);
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+}
+
+/* ---------- Reservatório: tanque com marcas ---------- */
+
+.reservatorio-corpo { display: flex; gap: 1.5rem; align-items: stretch; }
+.tanque-area { position: relative; width: 7.5rem; flex: none; }
+.tanque {
+  position: relative;
+  height: 18rem;
+  width: 5rem;
+  border: 2px solid var(--texto-suave);
+  border-radius: 0 0 var(--raio) var(--raio);
+  overflow: hidden;
+  background: var(--fundo);
+}
+.tanque-faixa { position: absolute; left: 0; right: 0; background: rgb(255 255 255 / 0.07); }
+.tanque-agua {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 0;
+  background: var(--agua);
+  transition: height 0.6s ease;
+}
+.tanque-marca {
+  position: absolute;
+  left: 5.4rem;
+  transform: translateY(50%);
+  font-size: 0.9rem;
+  color: var(--texto-suave);
+}
+.tanque-marca::before {
+  content: "";
+  position: absolute;
+  left: -0.9rem;
+  top: 50%;
+  width: 0.7rem;
+  border-top: 2px solid var(--texto-suave);
+}
+
+.reservatorio-dados { display: grid; align-content: start; gap: 0.1rem; }
+.numero-grande { font-size: 3.2rem; font-weight: 700; line-height: 1; }
+.numero-medio { margin-top: 1rem; font-size: 1.6rem; font-weight: 600; line-height: 1.1; }
+.situacao-linha {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0.5rem 0 0.25rem;
+  color: var(--cor-estado);
+  font-weight: 700;
+}
+
+/* ---------- Turbinas: linhas com barra de temperatura ---------- */
+
+.lista-turbinas { display: grid; }
+.turbina {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.5rem 1rem;
+  align-items: center;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--linha);
+}
+.turbina:first-child { padding-top: 0; }
+.turbina:last-child { padding-bottom: 0; border-bottom: 0; }  /* NOVO: a caixa já tem borda */
+.turbina-nome { display: flex; align-items: baseline; gap: 0.6rem; }
+.codigo { color: var(--texto-suave); font-size: 0.95rem; }
+
+.turbina-estado {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.6rem;
+}
+
+.selo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.15rem 0.7rem;
+  border: 1px solid var(--cor-estado);
+  border-radius: var(--raio);
+  color: var(--cor-estado);
+  font-weight: 700;
+}
+
+.turbina-temperatura {
+  display: flex;
+  align-items: baseline;
+  gap: 0.35rem;
+  grid-column: 1 / -1;
+}
+.turbina-temperatura .valor { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+.turbina-temperatura .unidade { color: var(--texto-suave); }
+.situacao-temperatura {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+  color: var(--cor-estado);
+  font-weight: 700;
+}
+
+.barra {
+  position: relative;
+  grid-column: 1 / -1;
+  height: 0.6rem;
+  border-radius: 2px;
+  background: rgb(255 255 255 / 0.1);
+}
+.barra-nivel { height: 100%; border-radius: 2px; background: var(--cor-estado); }
+.barra-marca {
+  position: absolute;
+  top: -0.25rem;
+  bottom: -0.25rem;
+  border-left: 2px solid var(--texto);
+}
+
+/* ---------- Ações sobre as turbinas ---------- */
+
+.botao-acao {
+  min-height: 2.75rem;
+  min-width: 6.5rem;
+  padding: 0.3rem 1rem;
+  border: 1px solid var(--texto-suave);
+  border-radius: var(--raio);
+  background: transparent;
+  font-weight: 600;
+}
+.botao-acao:hover { border-color: var(--texto); background: rgb(255 255 255 / 0.06); }
+.botao-acao:disabled,
+.botao-discreto:disabled { opacity: 0.5; cursor: wait; }
+
+.comandos-direita { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.aviso {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--ok);
+  border-radius: var(--raio);
+  background: color-mix(in srgb, var(--ok) 12%, var(--superficie));
+}
+
+/* ---------- Alertas e eventos ---------- */
+
+.lista-alertas { display: grid; gap: 1rem; }
+.alerta {
+  padding: 0.2rem 0 0.2rem 1rem;
+  border-left: 4px solid var(--cor-estado);
+}
+.alerta-titulo { display: flex; align-items: center; gap: 0.6rem; }
+.alerta-titulo strong { color: var(--cor-estado); }
+.alerta-mensagem { margin-top: 0.15rem; font-weight: 600; }
+.alerta-acao { margin-top: 0.15rem; color: var(--texto-suave); }
+
+.lista-eventos { display: grid; gap: 0.6rem; }
+.lista-eventos li { padding-bottom: 0.6rem; border-bottom: 1px solid var(--linha); }
+.lista-eventos li:last-child { padding-bottom: 0; border-bottom: 0; }  /* NOVO: a caixa já tem borda */
+.vazio { color: var(--texto-suave); }
+
+.erro {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--critico);
+  border-radius: var(--raio);
+  background: color-mix(in srgb, var(--critico) 15%, var(--superficie));
+}
+
+/* ---------- Toasts ---------- */
+
+.toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 10;
+  display: grid;
+  gap: 0.75rem;
+  width: min(25rem, calc(100vw - 2rem));
+}
+.toast {
+  position: relative;
+  padding: 0.9rem 1rem 0.9rem 1rem;
+  border: 2px solid var(--cor-estado);
+  border-radius: var(--raio);
+  background: color-mix(in srgb, var(--cor-estado) 16%, var(--superficie));
+  animation: toast-entrada 0.25s ease-out;
+}
+.toast-titulo { display: flex; align-items: center; gap: 0.6rem; padding-right: 5.5rem; }
+.toast-titulo strong { color: var(--cor-estado); }
+.toast-mensagem { margin-top: 0.2rem; font-weight: 600; }
+.toast-acao { margin-top: 0.2rem; color: var(--texto-suave); font-size: 1rem; }
+.toast-fechar {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0.2rem 0.8rem;
+  border: 1px solid var(--texto-suave);
+  border-radius: var(--raio);
+  background: transparent;
+}
+.toast-fechar:hover { border-color: var(--texto); }
+
+@keyframes toast-entrada {
+  from { opacity: 0; transform: translateY(0.6rem); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .toast { animation: none; }
+}
+
+/* ---------- Login ---------- */
+
+.pagina-login { display: grid; place-items: center; min-height: 100vh; padding: 1.5rem; }
+.login { width: min(100%, 24rem); }
+.login .produto { font-size: 2rem; }
+.login-subtitulo { margin: 0.25rem 0 1.5rem; color: var(--texto-suave); }
+
+.formulario { display: grid; gap: 0.5rem; }
+.formulario label { margin-top: 0.5rem; font-weight: 600; }
+.formulario input {
+  min-height: 3rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--linha);
+  border-radius: var(--raio);
+  background: var(--superficie);
+  color: var(--texto);
+  font: inherit;
+}
+.botao-principal {
+  min-height: 3rem;
+  margin-top: 1rem;
+  border: 0;
+  border-radius: var(--raio);
+  background: var(--texto);
+  color: var(--fundo);
+  font-weight: 700;
+}
+.botao-principal:disabled { opacity: 0.6; cursor: wait; }
+.dica { margin-top: 1.5rem; color: var(--texto-suave); font-size: 0.95rem; }
+
+[hidden] { display: none !important; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tanque-agua { transition: none; }
+}
+
+/* ---------- Celular ---------- */
+
+@media (max-width: 520px) {
+  .situacao-meta { grid-template-columns: 1fr 1fr; }
+  .reservatorio-corpo { gap: 1rem; }
+  .tanque { height: 15rem; }
+}
