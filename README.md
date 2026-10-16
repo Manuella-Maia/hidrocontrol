@@ -1,8 +1,18 @@
 # HidroControl
 
-Protótipo web em **PHP** para o monitoramento simplificado de uma usina hidrelétrica. O painel mostra ao operador o nível do reservatório, a vazão, a potência, a temperatura e o estado das turbinas, e **classifica cada parâmetro** como normal, em atenção ou crítico, de acordo com limites definidos. O operador também pode ligar e desligar turbinas, e cada ação fica registrada.
+![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
+![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
+![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=for-the-badge&logo=php&logoColor=white)
+![PHPUnit](https://img.shields.io/badge/PHPUnit-11-366488?style=for-the-badge)
+![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-6BA539?style=for-the-badge&logo=openapiinitiative&logoColor=white)
+![Swagger UI](https://img.shields.io/badge/Swagger_UI-85EA2D?style=for-the-badge&logo=swagger&logoColor=black)
+![Apache](https://img.shields.io/badge/Apache-D22128?style=for-the-badge&logo=apache&logoColor=white)
+![Laragon](https://img.shields.io/badge/Laragon-0E83CD?style=for-the-badge)
 
-Os dados são **simulados** (três cenários de teste) e as alterações do operador são guardadas em **arquivo JSON**, sem banco de dados e sem sensores reais. O foco do projeto é a **Programação Orientada a Objetos**, a modelagem em UML e a qualidade do código (testes automatizados e API documentada).
+Protótipo de **sistema web** em **PHP** para o monitoramento simplificado de uma usina hidrelétrica. O painel mostra ao operador o nível do reservatório, a vazão, a potência, a temperatura e o estado das turbinas, e **classifica cada parâmetro** como normal, em atenção ou crítico, de acordo com limites definidos. O operador também pode ligar e desligar turbinas, e cada ação fica registrada. Por trás do painel, uma **API HTTP que troca dados em JSON**, documentada em OpenAPI, alimenta a tela.
+
+Os dados são **simulados** (três cenários de teste) e as alterações do operador são guardadas em **arquivo JSON**, sem banco de dados e sem sensores reais. O foco do projeto é a **Programação Orientada a Objetos**, a modelagem em UML e a qualidade do código (testes automatizados e documentação da API).
 
 ---
 
@@ -32,6 +42,7 @@ Os dados são **simulados** (três cenários de teste) e as alterações do oper
   - [16. Solução de problemas](#16-solução-de-problemas)
   - [17. Trabalhos futuros](#17-trabalhos-futuros)
   - [18. Autores](#18-autores)
+  - [19.Licença](#19licença)
 
 ---
 
@@ -64,12 +75,12 @@ Os dados são **simulados** (três cenários de teste) e as alterações do oper
 
 | Camada | Tecnologia |
 |---|---|
-| Backend | PHP 8.2 ou superior (testado no PHP 8.3), Programação Orientada a Objetos, sem framework |
-| Frontend | HTML, CSS e JavaScript puros (módulos ES), sem biblioteca |
-| Testes | PHPUnit 11 (arquivo `phpunit.phar`, sem Composer) |
-| Documentação da API | OpenAPI 3.0 e Swagger UI |
-| Ambiente | Laragon (Apache + PHP) |
-| Diagramas | UML (caso de uso, classes, sequência) e fluxograma de processo |
+| Backend | ![PHP](https://img.shields.io/badge/PHP-8.2%2B-777BB4?style=flat&logo=php&logoColor=white)<br>PHP 8.2 ou superior (testado no PHP 8.3), Programação Orientada a Objetos, sem framework |
+| Frontend | ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white) ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=flat&logo=css3&logoColor=white) ![JavaScript](https://img.shields.io/badge/JavaScript-ES%20Modules-F7DF1E?style=flat&logo=javascript&logoColor=black)<br>HTML, CSS e JavaScript puros (módulos ES), sem biblioteca |
+| Testes | ![PHPUnit](https://img.shields.io/badge/PHPUnit-11-366488?style=flat&logo=php&logoColor=white)<br>PHPUnit 11 (arquivo `phpunit.phar`, sem Composer) |
+| Documentação da API | ![OpenAPI](https://img.shields.io/badge/OpenAPI-3.0-6BA539?style=flat&logo=openapiinitiative&logoColor=white) ![Swagger](https://img.shields.io/badge/Swagger%20UI-85EA2D?style=flat&logo=swagger&logoColor=black)<br>OpenAPI 3.0 e Swagger UI |
+| Ambiente | ![Laragon](https://img.shields.io/badge/Laragon-0E83CD?style=flat) ![Apache](https://img.shields.io/badge/Apache-D22128?style=flat&logo=apache&logoColor=white)<br>Laragon (Apache + PHP) |
+| Diagramas | ![UML](https://img.shields.io/badge/UML-diagramas-0b3a4f?style=flat)<br>UML (caso de uso, classes, sequência) e fluxograma de processo |
 
 ## 4. Instalação
 
@@ -508,5 +519,10 @@ Não há banco de dados. O que o operador faz é guardado em dois arquivos, cria
 ## 18. Autores
 
 **Manuella Maia Lopes**
-**nome**
-**nome**
+
+
+## 19.Licença
+
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+
+Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
